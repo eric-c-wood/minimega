@@ -240,6 +240,28 @@ func (c *captures) StopVM(s string) error {
 	return err
 }
 
+// StopVMByInterface stops capture for the specified VM and interface
+func (c *captures) StopVMByInterface(s string,iface int) error {
+	var found bool
+
+	err := c.stop(func(v capture) bool {
+		switch v := v.(type) {
+		case *pcapVMCapture:
+			r := v.VM.GetName() == s && v.Interface == iface
+			found = r || found
+			return r
+		}
+
+		return false
+	})
+
+	if err == nil && !found {
+		return fmt.Errorf("VM: `%v` does not exist with interface: '%v'", s,iface)
+	}
+	return err
+}
+
+
 // StopBridge stops capture for bridge (wildcard supported).
 func (c *captures) StopBridge(s, typ string) error {
 	return c.stop(func(v capture) bool {

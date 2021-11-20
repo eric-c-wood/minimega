@@ -34,7 +34,9 @@ var captureCLIHandlers = []minicli.Handler{
 		HelpShort: "capture experiment data for a VM",
 		Patterns: []string{
 			"capture <pcap,> vm <vm name> <interface index> <filename>",
+			"capture <pcap,> <delete,> vm <vm name> <interface index>",
 			"capture <pcap,> <delete,> vm <vm name>",
+			
 		},
 		Call:    wrapVMTargetCLI(cliCaptureVM),
 		Suggest: wrapVMSuggest(VM_ANY_STATE, false),
@@ -244,16 +246,21 @@ func cliCaptureVM(ns *Namespace, c *minicli.Command, resp *minicli.Response) err
 	iface := c.StringArgs["interface"]
 	fname := c.StringArgs["filename"]
 
+	// capture VM:interface -> pcap	
+	num, err := strconv.Atoi(iface)
+	if err != nil && iface != "" {
+		return fmt.Errorf("invalid interface: `%v`", iface)
+	}		
+
 	// stopping capture for one or all VMs
 	if c.BoolArgs["delete"] {
-		return ns.captures.StopVM(name)
-	}
-
-	// capture VM:interface -> pcap
-	num, err := strconv.Atoi(iface)
-	if err != nil {
-		return fmt.Errorf("invalid interface: `%v`", iface)
-	}
+		if iface != "" {
+			return ns.captures.StopVMByInterface(name,num)
+		} else {
+			return ns.captures.StopVM(name)
+		}
+		
+	}	
 
 	vm := ns.FindVM(name)
 	if vm == nil {
