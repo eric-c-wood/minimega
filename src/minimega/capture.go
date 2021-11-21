@@ -248,7 +248,7 @@ func (c *captures) StopVMByInterface(s string,iface int) error {
 		switch v := v.(type) {
 		case *pcapVMCapture:
 			r := v.VM.GetName() == s && v.Interface == iface
-			found = r || found
+			found = r
 			return r
 		}
 
