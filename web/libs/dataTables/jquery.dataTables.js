@@ -4262,7 +4262,7 @@
 		_fnColumnTypes( oSettings );
 	
 		/* In server-side processing all filtering is done by the server, so no point hanging around here */
-		if ( _fnDataSource( oSettings ) != 'ssp' )
+		if ( _fnDataSource( oSettings ) != 'ssp' && DataTable.ext.search.length == 0 )
 		{
 			/* Global filter */
 			_fnFilter( oSettings, oInput.sSearch, iForce, fnRegex(oInput), oInput.bSmart, oInput.bCaseInsensitive );
@@ -4275,6 +4275,15 @@
 					aoPrevSearch[i].bSmart, aoPrevSearch[i].bCaseInsensitive );
 			}
 	
+			/* Custom filtering */
+			_fnFilterCustom( oSettings );
+		}
+		else if(DataTable.ext.search.length > 0) {
+
+			fnSaveFilter( oInput );
+
+            oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
+			
 			/* Custom filtering */
 			_fnFilterCustom( oSettings );
 		}

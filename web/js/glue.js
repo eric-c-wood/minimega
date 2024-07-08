@@ -111,7 +111,7 @@ function initVMInfoDataTable() {
         }*/
     });
 
-
+    
     // Create second button group for other functionality
     /*
     new $.fn.dataTable.Buttons( vmDataTable, {
@@ -150,6 +150,25 @@ function initVMInfoDataTable() {
 			},
 		})
 	});
+
+    $.fn.dataTable.ext.search.push(            
+        function (settings,rowData,rowIndex,rowObject,counter) {            
+           
+            let searchTerm = vmDataTable.search().trim()
+
+            if (searchTerm.length == 0){
+                return true
+            }
+
+            let expressionTree = BuildTree(searchTerm)  
+            if (expressionTree === null) {
+                return true
+            }              
+
+            console.log("SearchFields:",expressionTree.searchFields)
+            return expressionTree.evaluate(rowObject);
+        }
+    );        
 
     if (VM_REFRESH_TIMEOUT >= 1000) {
         setInterval(function() {
@@ -484,6 +503,7 @@ function initScreenshotDataTable() {
     path = path.substr(0, path.indexOf("/tilevnc"));
 
     updateJSON(path+"/vms/info.json", updateScreenshotTable);
+    
 
     if (IMAGE_REFRESH_TIMEOUT > 0) {
         setInterval(function() {
@@ -496,7 +516,7 @@ function initScreenshotDataTable() {
 
 
 // Update the Screenshot table with new data
-function updateScreenshotTable(vmsData) {
+function updateScreenshotTable(vmsData) {   
 
     // disable auto-refresh there are too many VMs
     IMAGE_REFRESH_ENABLE = Object.keys(vmsData).length <= IMAGE_REFRESH_THRESHOLD;
@@ -546,19 +566,19 @@ function updateScreenshotTable(vmsData) {
             "host": vm.host,
             "state": vm.state,
             "model": toAppend.get(0).outerHTML,
-            "vm": vm,
+            "vm": vm,          
         });
     }
 
     // Push the list to DataTable
-    if ($.fn.dataTable.isDataTable("#screenshots-list")) {
+    if ($.fn.dataTable.isDataTable("#screenshots-list")) {        
         var table = $("#screenshots-list").dataTable();
         table.fnClearTable(false);
         if (screenshotList.length > 0) {
             table.fnAddData(screenshotList, false);
         }
-        table.fnDraw(false);
-    } else {
+        //table.fnDraw(false);
+    } else {        
         var table = $("#screenshots-list").DataTable({
             "autoWidth": false,
             "paging": true,
@@ -573,15 +593,42 @@ function updateScreenshotTable(vmsData) {
                 { "title": "Name", "data": "name", "visible": false },
                 { "title": "State", "data": "state", "visible": false },
                 { "title": "Host", "data": "host", "visible": false },
-                { "title": "Model", "data": "model", "searchable": false },
+                { "title": "Model", "data": "model", "searchable": false },                
                 { "title": "VM", "data": "vm", "visible": false, "searchable": false },
             ],
             "rowCallback": loadOrRestoreImage,
             "stateSave": true,
             "stateDuration": 0
         });
+        
+
+        $.fn.dataTable.ext.search.push(            
+            function (settings,rowData,rowIndex,rowObject,counter) {
+                               
+                let searchTerm = table.search().trim()
+
+                if (searchTerm.length == 0){
+                    return true
+                }
+
+                let expressionTree = BuildTree(searchTerm)  
+
+                if (expressionTree === null) {
+                    return true
+                }              
+                //expressionTree.printTree()
+                return expressionTree.evaluate(rowObject.vm);
+            }
+        );        
+
+        table.draw()
     }
 }
+
+
+
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -646,7 +693,7 @@ function loadOrRestoreImage (row, data, displayIndex) {
     if (data.vm.type === "container") {
         return;
     }
-
+	
     var img = $('img', row);
     var url = img.attr("data-url");
 
