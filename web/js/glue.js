@@ -575,7 +575,7 @@ function updateScreenshotTable(vmsData) {
         var table = $("#screenshots-list").dataTable();
         table.fnClearTable(false);
         if (screenshotList.length > 0) {
-            table.fnAddData(screenshotList, false);
+            table.fnAddData(screenshotList, true);
         }
         //table.fnDraw(false);
     } else {        
